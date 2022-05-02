@@ -293,12 +293,11 @@ class Lumberjacks(gym.Env):
         for (agent_id, agent), action in zip(self._agent_generator(), agents_action):
             if not self._agent_dones[agent_id]:
                 self._update_agent_pos(agent, action)
-                print('action', action)
 
         # Cut down trees
-        print('agent map', self._agent_map)
-        print('tree_map 2', self._tree_map)
         mask = (np.sum(self._agent_map, axis=2) >= self._tree_map) & (self._tree_map > 0)
+
+        # Only reward agent who cuts down the tree, not both agents. 
         if True in mask: 
             print('need to check if we want to cut the tree and assingn the reward to right agent')
             index = np.where(mask == True)
@@ -307,19 +306,21 @@ class Lumberjacks(gym.Env):
             agent_pos = self._agent_map[row_index][col_index]
             cut_agent = np.where(agent_pos == 1)
             cut_agent = cut_agent[0][0]
-            print('cutagent', cut_agent)
-            print('before cut ', self._total_trees_cut)
-            self._total_trees_cut[cut_agent] += 1
-            print('after cut', self._total_trees_cut)
-            rewards[cut_agent] += self._tree_cutdown_reward
 
-        
-        self._tree_map[mask] = 0
-
-        
+            # Internat ethical embedding: 
+            # If the other agent has less trees than the agent, do NOT cut the tree and do not get reward. 
+            if self._total_trees_cut[cut_agent] != max(self._total_trees_cut) or self._total_trees_cut[0] == self._total_trees_cut[1]:
+                print('before cut ', self._total_trees_cut)
+                self._total_trees_cut[cut_agent] += 1
+                print('after cut', self._total_trees_cut)
+                rewards[cut_agent] += self._tree_cutdown_reward
+                self._tree_map[mask] = 0
+            else: 
+                print('agent is not allowed to cut')
+                print(cut_agent, 'cut agent')
+                print('total trees', self._total_trees_cut)
         
         # Calculate rewards
-        print('mask', mask)
         # amount of 'trues' in mask times the cutdown reward = reward
         # rewards += np.sum(mask * self._tree_cutdown_reward, axis=(0, 1))
         self._total_episode_reward += rewards
