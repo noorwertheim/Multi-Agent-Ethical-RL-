@@ -1,7 +1,7 @@
-''' External ethical embedding 
-Ethical rewards are in the environment instead of in the agent. 
-If an agent cuts a tree when he already has more trees than the other agent, he will get a negative ethical reward. 
+''' Internal embedding of ethical values: 
+Avoid being greedy by implementing that if an agent has more trees than another agent, he won't cut any trees. 
 '''
+
 
 import copy
 import itertools
@@ -77,7 +77,7 @@ class Lumberjacks(gym.Env):
 
     def __init__(self, grid_shape: Coordinates = (5, 5), n_agents: int = 2, n_trees: int = 12,
                  agent_view: Tuple[int, int] = (1, 1), full_observable: bool = False,
-                 step_cost: float = -1, tree_cutdown_reward: float = 10, max_steps: int = 100, ethical_punishment: float = -10):
+                 step_cost: float = -1, tree_cutdown_reward: float = 10, max_steps: int = 100):
         assert 0 < n_agents
         assert n_agents + n_trees <= np.prod(grid_shape)
         assert 1 <= agent_view[0] <= grid_shape[0] and 1 <= agent_view[1] <= grid_shape[1]
@@ -89,7 +89,6 @@ class Lumberjacks(gym.Env):
         self.full_observable = full_observable
         self._step_cost = step_cost
         self._tree_cutdown_reward = tree_cutdown_reward
-        self._ethical_punishment = ethical_punishment
         self._max_steps = max_steps
         self.steps_beyond_done = 0
         self.seed()
@@ -102,7 +101,6 @@ class Lumberjacks(gym.Env):
         self._agent_map = None
         self._tree_map = None
         self._total_episode_reward = None
-        self._total_ethical_reward = None
         self._agent_dones = None
         # count how many trees each agent has cut
         self._total_trees_cut = [0, 0]
@@ -136,7 +134,6 @@ class Lumberjacks(gym.Env):
         self._init_episode()
         self._step_count = 0
         self._total_episode_reward = np.zeros(self.n_agents)
-        self._total_ethical_reward = np.zeros(self.n_agents)
         self._agent_dones = [False] * self.n_agents
         self.steps_beyond_done = 0
         self._total_trees_cut = [0, 0]
@@ -266,10 +263,6 @@ class Lumberjacks(gym.Env):
 
         return obs
 
-    def scalarise(self, ind_reward, eth_reward, w0, we):
-        # scalarises the ethical and individual rewards into one value using weights
-        return w0 * ind_reward + we * eth_reward
-
     def _agent_generator(self) -> Tuple[int, Agent]:
         """Yields agent_id and agent for all agents in environment."""
         for agent_id, agent in enumerate(self._agents):
@@ -300,7 +293,6 @@ class Lumberjacks(gym.Env):
 
         self._step_count += 1
         rewards = np.full(self.n_agents, self._step_cost)
-        ethical_rewards = [0, 0]
 
         # Move agents
         for (agent_id, agent), action in zip(self._agent_generator(), agents_action):
@@ -308,10 +300,13 @@ class Lumberjacks(gym.Env):
                 self._update_agent_pos(agent, action)
 
         # Cut down trees
+        print(self._agent_map, self._tree_map)
+        print(np.sum(self._agent_map, axis = 2))
         mask = (np.sum(self._agent_map, axis=2) >= self._tree_map) & (self._tree_map > 0)
 
         # Only reward agent who cuts down the tree, not both agents. 
         if True in mask: 
+            print('need to check if we want to cut the tree and assingn the reward to right agent')
             index = np.where(mask == True)
             row_index = index[0][0]
             col_index = index[1][0]
@@ -319,27 +314,23 @@ class Lumberjacks(gym.Env):
             cut_agent = np.where(agent_pos == 1)
             cut_agent = cut_agent[0][0]
 
-            # External ethical embedding: 
-            # If the cut_agent has more trees than the other agent, he receives a negative ethical reward
-            if self._total_trees_cut[cut_agent] == max(self._total_trees_cut) and self._total_trees_cut[0] != self._total_trees_cut[1]:
-                ethical_rewards[cut_agent] += self._ethical_punishment
-            # in any case the agent will cut the tree
-            self._total_trees_cut[cut_agent] += 1
-            rewards[cut_agent] += self._tree_cutdown_reward 
-            self._tree_map[mask] = 0
+            # Internat ethical embedding: 
+            # If the other agent has less trees than the agent, do NOT cut the tree and do not get reward. 
+            if self._total_trees_cut[cut_agent] != max(self._total_trees_cut) or self._total_trees_cut[0] == self._total_trees_cut[1]:
+                self._total_trees_cut[cut_agent] += 1
+                rewards[cut_agent] += self._tree_cutdown_reward
+                self._tree_map[mask] = 0
         
         # Calculate rewards
         # amount of 'trues' in mask times the cutdown reward = reward
         # rewards += np.sum(mask * self._tree_cutdown_reward, axis=(0, 1))
         self._total_episode_reward += rewards
-        self._total_ethical_reward += ethical_rewards
+        print('total reward', self._total_episode_reward)
 
         if (self._step_count >= self._max_steps) or (np.count_nonzero(self._tree_map) == 0):
             self._agent_dones = [True] * self.n_agents
-
-        total_rewards = self.scalarise(rewards, ethical_rewards, 1, 1)
-
-        return self.get_agent_obs(), rewards, self._agent_dones, {}, ethical_rewards, total_rewards
+        print('rewards', rewards)
+        return self.get_agent_obs(), rewards, self._agent_dones, {}
 
     def _update_agent_pos(self, agent: Agent, move: int):
         """Moves `agent` according the `move` command."""
