@@ -1,13 +1,21 @@
+
+''' Lumberjacks with two equally strong agents.
+No ethical knowledge
+To test regular performance
+'''
+
 import copy
 import itertools
 import logging
 from typing import List, Tuple, Union
+import random
 
 import gym
 import numpy as np
 from PIL import ImageColor
 from gym import spaces
 from gym.utils import seeding
+from sklearn.utils import column_or_1d
 
 from ..utils.action_space import MultiAgentActionSpace
 from ..utils.draw import draw_circle, draw_grid, fill_cell, write_cell_text
@@ -70,9 +78,9 @@ class Lumberjacks(gym.Env):
     """
     metadata = {'render.modes': ['human', 'rgb_array']}
 
-    def __init__(self, grid_shape: Coordinates = (5, 5), n_agents: int = 2, n_trees: int = 12,
+    def __init__(self, grid_shape: Coordinates = (5, 5), n_agents: int = 2, n_trees: int = 18,
                  agent_view: Tuple[int, int] = (1, 1), full_observable: bool = False,
-                 step_cost: float = -1, tree_cutdown_reward: float = 10, max_steps: int = 100):
+                 step_cost: float = -1, tree_cutdown_reward: float = 10, max_steps: int = 150, weak_percentage: float = 0.5):
         assert 0 < n_agents
         assert n_agents + n_trees <= np.prod(grid_shape)
         assert 1 <= agent_view[0] <= grid_shape[0] and 1 <= agent_view[1] <= grid_shape[1]
@@ -84,6 +92,7 @@ class Lumberjacks(gym.Env):
         self.full_observable = full_observable
         self._step_cost = step_cost
         self._tree_cutdown_reward = tree_cutdown_reward
+        self._weak_percentage = weak_percentage
         self._max_steps = max_steps
         self.steps_beyond_done = 0
         self.seed()
@@ -97,6 +106,8 @@ class Lumberjacks(gym.Env):
         self._tree_map = None
         self._total_episode_reward = None
         self._agent_dones = None
+        self._max_tree_strength = 1
+        self._total_trees_cut = [0, 0]
 
         mask_size = np.prod(tuple(2 * v + 1 for v in self._agent_view))
         # Agent ID (1) + Pos (2) + Step (1) + Neighborhood (2 * mask_size)
@@ -129,6 +140,7 @@ class Lumberjacks(gym.Env):
         self._total_episode_reward = np.zeros(self.n_agents)
         self._agent_dones = [False] * self.n_agents
         self.steps_beyond_done = 0
+        self._total_trees_cut = [0, 0]
 
         return self.get_agent_obs()
 
@@ -157,7 +169,7 @@ class Lumberjacks(gym.Env):
                 self._agents.append(Agent(agent_id, pos=pos))
                 agent_id += 1
             elif cell == PRE_IDS['tree']:
-                self._tree_map[pos] = self.np_random.randint(1, self.n_agents + 1)
+                self._tree_map[pos] = 1
                 tree_id += 1
 
     def _to_extended_coordinates(self, relative_coordinates):
@@ -293,10 +305,29 @@ class Lumberjacks(gym.Env):
 
         # Cut down trees
         mask = (np.sum(self._agent_map, axis=2) >= self._tree_map) & (self._tree_map > 0)
-        self._tree_map[mask] = 0
+        
+        if True in mask: 
+            count = np.count_nonzero(mask) # amount of true occurences
+            index = np.where(mask == True)
+            # if there are two agents who cut a tree:   
+              
+            if count > 1:
+                # both get reward, and both get extra tree
+                rewards += self._tree_cutdown_reward
+                self._tree_map[mask] = 0
+                self._total_trees_cut[0] += 1
+                self._total_trees_cut[1] += 1            
+            else: 
+                row_index = index[0][0]
+                col_index = index[1][0]
+                agent_pos = self._agent_map[row_index][col_index]
+                cut_agent = np.where(agent_pos == 1)
+                cut_agent = cut_agent[0][0]
+                self._total_trees_cut[cut_agent] += 1
+                rewards[cut_agent] += self._tree_cutdown_reward
+                self._tree_map[mask] = 0
 
         # Calculate rewards
-        rewards += np.sum(mask * self._tree_cutdown_reward, axis=(0, 1))
         self._total_episode_reward += rewards
 
         if (self._step_count >= self._max_steps) or (np.count_nonzero(self._tree_map) == 0):

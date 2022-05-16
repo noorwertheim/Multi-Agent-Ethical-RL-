@@ -86,7 +86,7 @@ class Lumberjacks(gym.Env):
 
     def __init__(self, grid_shape: Coordinates = (5, 5), n_agents: int = 2, n_trees: int = 12,
                  agent_view: Tuple[int, int] = (1, 1), full_observable: bool = False,
-                 step_cost: float = -1, tree_cutdown_reward: float = 10, max_steps: int = 100, lower_cutdown_reward: float = 5, weak_percentage: float = 0.5):
+                 step_cost: float = -1, tree_cutdown_reward: float = 10, max_steps: int = 100, lower_cutdown_reward: float = -15, weak_percentage: float = 0.5):
         assert 0 < n_agents
         assert n_agents + n_trees <= np.prod(grid_shape)
         assert 1 <= agent_view[0] <= grid_shape[0] and 1 <= agent_view[1] <= grid_shape[1]
@@ -332,7 +332,9 @@ class Lumberjacks(gym.Env):
                             self._tree_map[mask] = 0
                     # Otherwise, he will receive a lower cutting reward. 
                     else: 
+                        # ageng gets rewarded with tree cutdown and punished with lower tree cutdown
                         self._total_trees_cut[cut_agent] += 1
+                        rewards[cut_agent] += self._tree_cutdown_reward
                         rewards[cut_agent] += self._lower_cutdown_reward
                         self._tree_map[mask] = 0
 
