@@ -9,7 +9,7 @@ The environment used is the Lumberjack-v0 environment from https://github.com/ko
 
 **Ethical Value Embedding**
 
-An ethical objective was added to the lumberjacks environment, according to the method of Rodriguez-Soto et al. (2022). Using this method, the agents were trained to behave ethically, and 'share' the amount of trees each agent cut. 
+An ethical objective was added to the lumberjacks environment, according to the method of Rodriguez-Soto et al. (2022). Using this method, the agents were trained to behave ethically, and each cut an equal amount of trees.
 
 **Value Decomposition Network**
 
