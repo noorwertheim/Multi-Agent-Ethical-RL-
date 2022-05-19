@@ -198,10 +198,10 @@ def main(env_name, lr, gamma, batch_size, buffer_limit, log_interval, max_episod
             print("#{:<10}/{} episodes , avg train score : {:.1f}, test score: {:.1f} n_buffer : {}, eps : {:.1f}"
                   .format(episode_i, max_episodes, train_score, test_score, memory.size(), epsilon))
             print('ethical_test_score', test_ethical, 'individual_test_score', test_individual)
-            trees_cut_weak.append(env._total_trees_cut[0])
-            trees_cut_strong.append(env._total_trees_cut[1])
-            trees_cut_weak_test.append(test_env._total_trees_cut[0])
-            trees_cut_strong_test.append(test_env._total_trees_cut[1])
+            trees_cut_weak.append(env._total_trees_cut[1])
+            trees_cut_strong.append(env._total_trees_cut[0])
+            trees_cut_weak_test.append(test_env._total_trees_cut[1])
+            trees_cut_strong_test.append(test_env._total_trees_cut[0])
             
             if USE_WANDB:
                 wandb.log({'episode': episode_i, 'test-score': test_score, 'ethical-test-score': test_ethical, 'individual-test-score': test_individual, 'buffer-size': memory.size(),
@@ -210,10 +210,10 @@ def main(env_name, lr, gamma, batch_size, buffer_limit, log_interval, max_episod
             ethical_score = 0
             individual_score = 0
 
-    print('trees cut weak', trees_cut_weak)
-    print('trees cut strong', trees_cut_strong)
-    print('trees_cut_weak_test', trees_cut_weak_test)
-    print('trees_cut_strong_test', trees_cut_strong_test)
+    print('trees_cut_weak = ', trees_cut_weak)
+    print('trees_cut_strong = ', trees_cut_strong)
+    print('trees_cut_weak_test = ', trees_cut_weak_test)
+    print('trees_cut_strong_test = ', trees_cut_strong_test)
     env.close()
     test_env.close()
 
