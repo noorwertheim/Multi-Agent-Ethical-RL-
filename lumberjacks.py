@@ -80,7 +80,7 @@ class Lumberjacks(gym.Env):
 
     def __init__(self, grid_shape: Coordinates = (5, 5), n_agents: int = 2, n_trees: int = 18,
                  agent_view: Tuple[int, int] = (1, 1), full_observable: bool = False,
-                 step_cost: float = -1, tree_cutdown_reward: float = 10, max_steps: int = 150, weak_percentage: float = 0.5, normative_reward: float = -10, evaluative_reward: float = 10, w0: float = 1, we: float = 0.71):
+                 step_cost: float = -1, tree_cutdown_reward: float = 10, max_steps: int = 150, weak_percentage: float = 0.5, normative_reward: float = -10, evaluative_reward: float = 10, w0: float = 1, we: float = 1.3):
         assert 0 < n_agents
         assert n_agents + n_trees <= np.prod(grid_shape)
         assert 1 <= agent_view[0] <= grid_shape[0] and 1 <= agent_view[1] <= grid_shape[1]
@@ -320,10 +320,14 @@ class Lumberjacks(gym.Env):
                 if random.random() <= self._weak_percentage:
                     rewards[1] += self._tree_cutdown_reward
                     self._total_trees_cut[1] += 1  
-                    ethical_rewards[1] += self._normative_reward
+                    if self._total_trees_cut[1] and self._total_trees_cut[0] > 0:
+                        if self._total_trees_cut[0] / self._total_trees_cut[1] < 0.5: 
+                            ethical_rewards[1] += self._normative_reward
                     ethical_rewards[0] += self._evaluative_reward
                 rewards[0] += self._tree_cutdown_reward
-                ethical_rewards[0] += self._normative_reward
+                if self._total_trees_cut[1] and self._total_trees_cut[0] > 0:
+                    if self._total_trees_cut[1] / self._total_trees_cut[0] < 0.5: 
+                        ethical_rewards[0] += self._normative_reward
                 ethical_rewards[1] += self._evaluative_reward
                 self._tree_map[mask] = 0
                 self._total_trees_cut[0] += 1
@@ -342,15 +346,17 @@ class Lumberjacks(gym.Env):
                         self._total_trees_cut[cut_agent] += 1
                         rewards[cut_agent] += self._tree_cutdown_reward
                         self._tree_map[mask] = 0
-                        if self._total_trees_cut[0] / self._total_trees_cut[1] < 0.5: 
-                            ethical_rewards[1] += self._normative_reward
+                        if self._total_trees_cut[1] and self._total_trees_cut[0] > 0:
+                            if self._total_trees_cut[0] / self._total_trees_cut[1] < 0.5: 
+                                ethical_rewards[1] += self._normative_reward
                         ethical_rewards[0] += self._evaluative_reward
             # strong agent can always cut
                 else: 
                     self._total_trees_cut[cut_agent] += 1
                     rewards[cut_agent] += self._tree_cutdown_reward
-                    if self._total_trees_cut[1] / self._total_trees_cut[0] < 0.5: 
-                        ethical_rewards[0] += self._normative_reward
+                    if self._total_trees_cut[1] and self._total_trees_cut[0] > 0:
+                        if self._total_trees_cut[1] / self._total_trees_cut[0] < 0.5: 
+                            ethical_rewards[0] += self._normative_reward
                     ethical_rewards[1] += self._evaluative_reward
                     self._tree_map[mask] = 0
         total_rewards = self._w0 * rewards + self._we * ethical_rewards
