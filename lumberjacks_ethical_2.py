@@ -80,7 +80,7 @@ class Lumberjacks(gym.Env):
 
     def __init__(self, grid_shape: Coordinates = (5, 5), n_agents: int = 2, n_trees: int = 18,
                  agent_view: Tuple[int, int] = (1, 1), full_observable: bool = False,
-                 step_cost: float = -1, tree_cutdown_reward: float = 10, max_steps: int = 150, weak_percentage: float = 0.5, normative_reward: float = -10, evaluative_reward: float = 10, w0: float = 1, we1: float = 1.2, we2: float = 0.5):
+                 step_cost: float = -1, tree_cutdown_reward: float = 10, max_steps: int = 150, weak_percentage: float = 0.5, normative_reward: float = -10, evaluative_reward: float = 10, w0: float = 1, we1: float = 1, we2: float = 0.5):
         assert 0 < n_agents
         assert n_agents + n_trees <= np.prod(grid_shape)
         assert 1 <= agent_view[0] <= grid_shape[0] and 1 <= agent_view[1] <= grid_shape[1]
