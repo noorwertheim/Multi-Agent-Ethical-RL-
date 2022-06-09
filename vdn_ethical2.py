@@ -145,8 +145,7 @@ def test(env, num_episodes, q):
                 individual_reward_tot += individual_reward
 
                 state = next_state
-                print(ethical_reward_tot)
-                print(ethical_reward_tot / num_episodes)
+
 
     return score / num_episodes, ethical_score / num_episodes, individual_score / num_episodes, ethical_reward_tot / num_episodes, individual_reward_tot / num_episodes
 
