@@ -22,8 +22,8 @@ The agents are trained using a Value Decomposition Network. This algorithm is fo
 **lumberjacks_ethial2.py** Lumberjacks environment with ethical embedding. This version trains two agents using different reward functions. 
 **lumberjacks_strong_strong.py** Lumberjacks environment with no ethical embedding and two equally strong agents. 
 **lumberjacks_weak_strong.py** Lumberjacks environment with no ethical embedding and a weak and a strong angent. 
-**vdn_ethical** Value decomposition network adjusted to the ethical lumberjacks environments. This implementation is for training the agents using the same reward function.  
-**vdn_ethical** Value decomposition network adjusted to the ethical lumberjacks environments. This implementation is for training the agents using different reward functions. 
+**vdn_ethical.py** Value decomposition network adjusted to the ethical lumberjacks environments. This implementation is for training the agents using the same reward function.  
+**vdn_ethical.py** Value decomposition network adjusted to the ethical lumberjacks environments. This implementation is for training the agents using different reward functions. 
 
 ### References 
 
