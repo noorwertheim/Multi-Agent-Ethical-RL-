@@ -1,5 +1,5 @@
 # Multi-Agent-Ethical-Reinforcement-Learning
-## Thesis project in which agents are trained to behave ethically using Deep Reinforcement Learning
+## Thesis project for training agents to behave ethically using Deep Reinforcement Learning
 
 
 
