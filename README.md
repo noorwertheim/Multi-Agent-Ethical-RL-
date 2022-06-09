@@ -15,6 +15,18 @@ An ethical objective was added to the lumberjacks environment, according to the 
 
 The agents are trained using a Value Decomposition Network. This algorithm is found in vdn.py. The one used here is from https://github.com/koulanurag/minimal-marl. 
 
+
+**File Descriptions**
+
+<u>lumberjacks.py</u> Used for running the vdn algorithm. Paste in here which version of the Lumberjacks environment you want to use. 
+<u>lumberjacks_ethial.py</u> Lumberjacks environment with ethical embedding. This version trains two agents using the same reward function. 
+<u>lumberjacks_ethial2.py</u> Lumberjacks environment with ethical embedding. This version trains two agents using different reward functions. 
+<u>lumberjacks_strong_strong.py</u> Lumberjacks environment with no ethical embedding and two equally strong agents. 
+<u>lumberjacks_weak_strong.py</u> Lumberjacks environment with no ethical embedding and a weak and a strong angent. 
+<u>vdn_ethical</u> Value decomposition network adjusted to the ethical lumberjacks environments. This implementation is for training the agents using the same reward function.  
+<u>vdn_ethical</u> Value decomposition network adjusted to the ethical lumberjacks environments. This implementation is for training the agents using different reward functions. 
+
+
 **References**
 
 Koul, A. (2019). ma-gym: Collection of multi-agent environments based on openai
